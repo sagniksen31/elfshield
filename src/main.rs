@@ -7,17 +7,17 @@ use goblin::elf64::program_header::*;
 
 fn get_arch(machine: u16) -> &'static str {
     match machine {
-        3 => "x86",
-        40 => "ARM",
-        62 => "x86_64",
-        183 => "AArch64",
-        243 => "RISC-V",
+        EM_386 => "x86",
+        EM_ARM => "ARM",
+        EM_X86_64 => "x86_64",
+        EM_AARCH64 => "AArch64",
+        EM_RISCV => "RISC-V",
         _ => "Unknown",
     }
 }
 
-fn get_file_type(t: u16) -> &'static str {
-    match t {
+fn get_file_type(file_type: u16) -> &'static str {
+    match file_type {
         ET_REL => "Relocatable",
         ET_EXEC => "Executable",
         ET_DYN => "Shared Object / PIE",
@@ -26,8 +26,8 @@ fn get_file_type(t: u16) -> &'static str {
     }
 }
 
-fn is_nx(t: &Elf) -> bool {
-    for ph in &t.program_headers {
+fn is_nx(elf: &Elf) -> bool {
+    for ph in &elf.program_headers {
         if ph.p_type == PT_GNU_STACK {
             return (ph.p_flags & PF_X) == 0; //bitwise and to check if PF_X bit is set or not
         }
@@ -66,10 +66,9 @@ fn main() {
     } else {
         println!("PIE: DISABLED");
     }
-    if is_nx(&elf){
+    if is_nx(&elf) {
         println!("NX: ENABLED");
     } else {
         println!("NX: DISABLED");
     }
-    
 }
