@@ -3,7 +3,25 @@ use std::fs;
 
 use goblin::elf::Elf;
 use goblin::elf::header::*;
-use goblin::elf64::program_header::*;
+use goblin::elf::program_header::*;
+
+#[derive(Debug, PartialEq)]
+enum CheckStatus {
+    Enabled,
+    Disabled,
+    Unknown(String), // carries an explanation of why it's unknown
+}
+
+// Implement Display so we can println!("{}", status) directly.
+impl std::fmt::Display for CheckStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CheckStatus::Enabled       => write!(f, "ENABLED"),
+            CheckStatus::Disabled      => write!(f, "DISABLED"),
+            CheckStatus::Unknown(msg)  => write!(f, "UNKNOWN ({})", msg),
+        }
+    }
+}
 
 fn get_arch(machine: u16) -> &'static str {
     match machine {
@@ -26,19 +44,49 @@ fn get_file_type(file_type: u16) -> &'static str {
     }
 }
 
-fn is_nx(elf: &Elf) -> bool {
+fn is_nx(elf: &Elf) -> CheckStatus {
     for ph in &elf.program_headers {
         if ph.p_type == PT_GNU_STACK {
-            return (ph.p_flags & PF_X) == 0; //bitwise and to check if PF_X bit is set or not
+            return if (ph.p_flags & PF_X) == 0 {
+                CheckStatus::Enabled
+            } else {
+                CheckStatus::Disabled
+            };
         }
     }
-    false
+    // Absent PT_GNU_STACK does NOT mean NX is off.
+    // Modern kernels default to NX-enabled, but we cannot guarantee it.
+    CheckStatus::Unknown("PT_GNU_STACK segment absent — kernel default applies".to_string())
 }
+
+fn is_pie(elf: &Elf) -> CheckStatus {
+    match elf.header.e_type {
+        ET_EXEC => CheckStatus::Disabled,
+
+        ET_DYN => {
+            // ET_DYN alone does not mean PIE — shared libraries are also ET_DYN.
+            // PT_INTERP (the dynamic linker path) is only present in executables.
+            let has_interp = elf
+                .program_headers
+                .iter()
+                .any(|ph| ph.p_type == PT_INTERP);
+
+            if has_interp {
+                CheckStatus::Enabled
+            } else {
+                CheckStatus::Unknown("shared library — PIE not applicable".to_string())
+            }
+        }
+
+        _ => CheckStatus::Unknown("not an executable ELF type".to_string()),
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        println!("Usage: cargo run <binary>");
+        eprintln!("Usage: cargo run <binary>");
         return;
     }
 
@@ -61,14 +109,7 @@ fn main() {
             println!("  {}", name);
         }
     }
-    if elf.header.e_type == ET_DYN {
-        println!("PIE: ENABLED");
-    } else {
-        println!("PIE: DISABLED");
-    }
-    if is_nx(&elf) {
-        println!("NX: ENABLED");
-    } else {
-        println!("NX: DISABLED");
-    }
+    println!("  PIE:  {}", is_pie(&elf));
+    println!("  NX:   {}", is_nx(&elf));
+    //print!("{:?}", elf.program_headers);
 }
