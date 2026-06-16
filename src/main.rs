@@ -82,6 +82,36 @@ fn is_pie(elf: &Elf) -> CheckStatus {
     }
 }
 
+fn has_symbol(elf: &Elf, target: &str) -> bool{
+    for sym in &elf.dynsyms {
+        if let Some(name) = elf.dynstrtab.get_at(sym.st_name) {
+            if name == target {
+                return true;
+            }
+        }
+    }
+    for sym in &elf.syms {
+        if let Some(name) = elf.strtab.get_at(sym.st_name) {
+            if name == target {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+fn check_canary(elf: &Elf) -> CheckStatus {
+    let has_canary_symbol = has_symbol(elf, "__stack_chk_fail");
+    if elf.syms.is_empty() && elf.dynsyms.is_empty(){
+        return CheckStatus::Unknown("Canary couldn't be determined, might be stripped and static".into());
+    }
+    if has_canary_symbol{
+        CheckStatus::Enabled
+    } else {
+        CheckStatus::Disabled // we'll refine UNKNOWN later
+    }
+
+}
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -111,5 +141,8 @@ fn main() {
     }
     println!("  PIE:  {}", is_pie(&elf));
     println!("  NX:   {}", is_nx(&elf));
-    //print!("{:?}", elf.program_headers);
+    print!("{:?}", elf.dynsyms);
+    print!(" STRTAB : \n{:?}", elf.syms.len());
+    print!(" STRTAB : \n{:?}", elf.dynsyms.len());
+    println!("Canary: {}", check_canary(&elf));
 }
