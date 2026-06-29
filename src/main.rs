@@ -60,4 +60,5 @@ fn main() {
     println!("  PIE:  {}", is_pie(&elf));
     println!("  NX:   {}", is_nx(&elf));
     println!("Canary: {}", check_canary(&elf));
+    println!("Relro: {}", check_relro(&elf));
 }

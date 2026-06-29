@@ -9,6 +9,13 @@ pub enum CheckStatus {
     Unknown(String), // carries an explanation of why it's unknown
 }
 
+#[derive(Debug, PartialEq)]
+pub enum RelroStatus {
+    None,
+    Partial,
+    Full,
+}
+
 // Implement Display so we can println!("{}", status) directly.
 impl std::fmt::Display for CheckStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -16,6 +23,16 @@ impl std::fmt::Display for CheckStatus {
             CheckStatus::Enabled      => write!(f, "ENABLED"),
             CheckStatus::Disabled     => write!(f, "DISABLED"),
             CheckStatus::Unknown(msg) => write!(f, "UNKNOWN ({})", msg),
+        }
+    }
+}
+
+impl std::fmt::Display for RelroStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RelroStatus::None      => write!(f, "None"),
+            RelroStatus::Partial     => write!(f, "Partial"),
+            RelroStatus::Full     => write!(f, "Full"),
         }
     }
 }
@@ -79,12 +96,42 @@ fn has_symbol(elf: &Elf, target: &str) -> bool {
 pub fn check_canary(elf: &Elf) -> CheckStatus {
     if elf.syms.is_empty() && elf.dynsyms.is_empty() {
         return CheckStatus::Unknown(
-            "Canary couldn't be determined, might be stripped and static".into(),
+            "No symbol information available".into(),
         );
     }
     if has_symbol(elf, "__stack_chk_fail") {
         CheckStatus::Enabled
     } else {
         CheckStatus::Disabled // we'll refine UNKNOWN later
+    }
+}
+
+use goblin::elf::dynamic::{DF_1_NOW, DF_BIND_NOW};
+
+pub fn check_relro(elf: &Elf) -> RelroStatus {
+    // Step 1: Does the binary contain a PT_GNU_RELRO segment?
+    let has_relro = elf
+        .program_headers
+        .iter()
+        .any(|ph| ph.p_type == PT_GNU_RELRO);
+
+    if !has_relro {
+        return RelroStatus::None;
+    }
+
+    // Step 2: Check whether BIND_NOW/NOW is enabled.
+    if let Some(dynamic) = &elf.dynamic {
+        let bind_now = (dynamic.info.flags & DF_BIND_NOW) != 0
+            || (dynamic.info.flags_1 & DF_1_NOW) != 0;
+
+        if bind_now {
+            RelroStatus::Full
+        } else {
+            RelroStatus::Partial
+        }
+    } else {
+        // Static binaries may not have a .dynamic section.
+        // They cannot express BIND_NOW, so conservatively report Partial.
+        RelroStatus::Partial
     }
 }
