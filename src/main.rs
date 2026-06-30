@@ -1,4 +1,5 @@
 mod checks;
+mod constants;
 
 use std::env;
 use std::fs;
@@ -61,4 +62,5 @@ fn main() {
     println!("  NX:   {}", is_nx(&elf));
     println!("Canary: {}", check_canary(&elf));
     println!("Relro: {}", check_relro(&elf));
+    println!("Fortify: {}", check_fortify(&elf))
 }

@@ -1,7 +1,7 @@
 use goblin::elf::Elf;
 use goblin::elf::header::*;
 use goblin::elf::program_header::*;
-
+use crate::constants::FORTIFY_SYMBOLS;
 #[derive(Debug, PartialEq)]
 pub enum CheckStatus {
     Enabled,
@@ -134,4 +134,13 @@ pub fn check_relro(elf: &Elf) -> RelroStatus {
         // They cannot express BIND_NOW, so conservatively report Partial.
         RelroStatus::Partial
     }
+}
+
+pub fn check_fortify(elf: &Elf) -> CheckStatus {
+    for symbol in FORTIFY_SYMBOLS{
+        if has_symbol(elf, symbol){
+            return CheckStatus::Enabled;
+        }
+    }
+    return CheckStatus::Disabled;
 }
