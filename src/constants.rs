@@ -1,56 +1,79 @@
-pub const FORTIFY_SYMBOLS: &[&str] = &[
-    "__memcpy_chk",
-    "__memmove_chk",
-    "__mempcpy_chk",
-    "__memset_chk",
+pub struct FortifyPair {
+    pub base: &'static str,
+    pub fortified: &'static str,
+}
 
-    "__strcpy_chk",
-    "__strncpy_chk",
-    "__strcat_chk",
-    "__strncat_chk",
-    "__stpcpy_chk",
-    "__stpncpy_chk",
-
-    "__sprintf_chk",
-    "__snprintf_chk",
-    "__vsprintf_chk",
-    "__vsnprintf_chk",
-
-    "__printf_chk",
-    "__fprintf_chk",
-    "__vprintf_chk",
-    "__vfprintf_chk",
-
-    "__fwprintf_chk",
-    "__vfwprintf_chk",
-    "__swprintf_chk",
-    "__vswprintf_chk",
-    "__wprintf_chk",
-
-    "__read_chk",
-    "__pread_chk",
-    "__pread64_chk",
-    "__recv_chk",
-    "__recvfrom_chk",
-
-    "__getcwd_chk",
-    "__readlink_chk",
-    "__readlinkat_chk",
-    "__realpath_chk",
-
-    "__wcscpy_chk",
-    "__wcsncpy_chk",
-    "__wcscat_chk",
-    "__wcsncat_chk",
-    "__wmemcpy_chk",
-    "__wmemmove_chk",
-    "__wmempcpy_chk",
-    "__wmemset_chk",
-
-    "__fdelt_chk",
-
-    "__open_2",
-    "__open64_2",
-    "__openat_2",
-    "__openat64_2",
+pub const FORTIFY_PAIRS: &[FortifyPair] = &[
+    FortifyPair {
+        base: "memcpy",
+        fortified: "__memcpy_chk",
+    },
+    FortifyPair {
+        base: "memmove",
+        fortified: "__memmove_chk",
+    },
+    FortifyPair {
+        base: "mempcpy",
+        fortified: "__mempcpy_chk",
+    },
+    FortifyPair {
+        base: "memset",
+        fortified: "__memset_chk",
+    },
+    FortifyPair {
+        base: "stpcpy",
+        fortified: "__stpcpy_chk",
+    },
+    FortifyPair {
+        base: "stpncpy",
+        fortified: "__stpncpy_chk",
+    },
+    FortifyPair {
+        base: "strcat",
+        fortified: "__strcat_chk",
+    },
+    FortifyPair {
+        base: "strcpy",
+        fortified: "__strcpy_chk",
+    },
+    FortifyPair {
+        base: "strncat",
+        fortified: "__strncat_chk",
+    },
+    FortifyPair {
+        base: "strncpy",
+        fortified: "__strncpy_chk",
+    },
+    FortifyPair {
+        base: "printf",
+        fortified: "__printf_chk",
+    },
+    FortifyPair {
+        base: "fprintf",
+        fortified: "__fprintf_chk",
+    },
+    FortifyPair {
+        base: "vprintf",
+        fortified: "__vprintf_chk",
+    },
+    FortifyPair {
+        base: "vfprintf",
+        fortified: "__vfprintf_chk",
+    },
+    FortifyPair {
+        base: "sprintf",
+        fortified: "__sprintf_chk",
+    },
+    FortifyPair {
+        base: "snprintf",
+        fortified: "__snprintf_chk",
+    },
+    FortifyPair {
+        base: "vsprintf",
+        fortified: "__vsprintf_chk",
+    },
+    FortifyPair {
+        base: "vsnprintf",
+        fortified: "__vsnprintf_chk",
+    },
 ];

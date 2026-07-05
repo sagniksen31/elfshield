@@ -1,7 +1,7 @@
 use goblin::elf::Elf;
 use goblin::elf::header::*;
 use goblin::elf::program_header::*;
-use crate::constants::FORTIFY_SYMBOLS;
+use crate::constants::FORTIFY_PAIRS;
 #[derive(Debug, PartialEq)]
 pub enum CheckStatus {
     Enabled,
@@ -14,6 +14,13 @@ pub enum RelroStatus {
     None,
     Partial,
     Full,
+}
+
+#[derive(Debug)]
+pub struct FortifyStatus {
+    pub enabled: bool,
+    pub fortified: usize,
+    pub fortifiable: usize,
 }
 
 // Implement Display so we can println!("{}", status) directly.
@@ -33,6 +40,25 @@ impl std::fmt::Display for RelroStatus {
             RelroStatus::None      => write!(f, "None"),
             RelroStatus::Partial     => write!(f, "Partial"),
             RelroStatus::Full     => write!(f, "Full"),
+        }
+    }
+}
+//display status for fortify
+impl std::fmt::Display for FortifyStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.enabled {
+            write!(
+                f,
+                "ENABLED (Fortified: {}, Fortifiable: {})",
+                self.fortified,
+                self.fortifiable
+            )
+        } else {
+            write!(
+                f,
+                "DISABLED (Fortified: 0, Fortifiable: {})",
+                self.fortifiable
+            )
         }
     }
 }
@@ -136,11 +162,22 @@ pub fn check_relro(elf: &Elf) -> RelroStatus {
     }
 }
 
-pub fn check_fortify(elf: &Elf) -> CheckStatus {
-    for symbol in FORTIFY_SYMBOLS{
-        if has_symbol(elf, symbol){
-            return CheckStatus::Enabled;
+pub fn check_fortify(elf: &Elf) -> FortifyStatus {
+    let mut fortified = 0;
+    let mut fortifiable = 0;
+
+    for pair in FORTIFY_PAIRS {
+        if has_symbol(elf, pair.fortified) {
+            fortified += 1;
+            fortifiable += 1;
+        } else if has_symbol(elf, pair.base) {
+            fortifiable += 1;
         }
     }
-    return CheckStatus::Disabled;
+
+    FortifyStatus {
+        enabled: fortified > 0,
+        fortified,
+        fortifiable,
+    }
 }
