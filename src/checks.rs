@@ -1,6 +1,8 @@
 use goblin::elf::Elf;
 use goblin::elf::header::*;
 use goblin::elf::program_header::*;
+use goblin::elf64::dynamic::DT_RPATH;
+use goblin::elf64::dynamic::DT_RUNPATH;
 use crate::constants::FORTIFY_PAIRS;
 #[derive(Debug, PartialEq)]
 pub enum CheckStatus {
@@ -21,6 +23,11 @@ pub struct FortifyStatus {
     pub enabled: bool,
     pub fortified: usize,
     pub fortifiable: usize,
+}
+#[derive(Debug)]
+pub struct RPathStatus {
+    pub rpath: Option<String>,
+    pub runpath: Option<String>,
 }
 
 // Implement Display so we can println!("{}", status) directly.
@@ -60,6 +67,17 @@ impl std::fmt::Display for FortifyStatus {
                 self.fortifiable
             )
         }
+    }
+}
+//runpath display
+impl std::fmt::Display for RPathStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "RPATH: {}\nRUNPATH: {}",
+            self.rpath.as_deref().unwrap_or("None"),
+            self.runpath.as_deref().unwrap_or("None")
+        )
     }
 }
 
@@ -179,5 +197,33 @@ pub fn check_fortify(elf: &Elf) -> FortifyStatus {
         enabled: fortified > 0,
         fortified,
         fortifiable,
+    }
+}
+
+pub fn check_rpaths(elf: &Elf) -> RPathStatus {
+    let mut rpath = None;
+    let mut runpath = None;
+
+    if let Some(dynamic) = &elf.dynamic {
+        for dyn_entry in &dynamic.dyns {
+            match dyn_entry.d_tag {
+                DT_RPATH => {
+                    if let Some(path) = elf.dynstrtab.get_at(dyn_entry.d_val as usize) {
+                        rpath = Some(path.to_string());
+                    }
+                }
+                DT_RUNPATH => {
+                    if let Some(path) = elf.dynstrtab.get_at(dyn_entry.d_val as usize) {
+                        runpath = Some(path.to_string());
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    RPathStatus {
+        rpath,
+        runpath,
     }
 }

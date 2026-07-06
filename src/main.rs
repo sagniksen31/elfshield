@@ -62,5 +62,6 @@ fn main() {
     println!("  NX:   {}", is_nx(&elf));
     println!("Canary: {}", check_canary(&elf));
     println!("Relro: {}", check_relro(&elf));
-    println!("Fortify: {}", check_fortify(&elf))
+    println!("Fortify: {}", check_fortify(&elf));
+    println!("{}", check_rpaths(&elf)); //runpath
 }
