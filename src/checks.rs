@@ -1,6 +1,7 @@
 use goblin::elf::Elf;
 use goblin::elf::header::*;
 use goblin::elf::program_header::*;
+use goblin::elf64::dynamic::DT_NEEDED;
 use goblin::elf64::dynamic::DT_RPATH;
 use goblin::elf64::dynamic::DT_RUNPATH;
 use crate::constants::FORTIFY_PAIRS;
@@ -28,6 +29,11 @@ pub struct FortifyStatus {
 pub struct RPathStatus {
     pub rpath: Option<String>,
     pub runpath: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct NeededLibraries {
+    pub libraries: Vec<String>,
 }
 
 // Implement Display so we can println!("{}", status) directly.
@@ -78,6 +84,16 @@ impl std::fmt::Display for RPathStatus {
             self.rpath.as_deref().unwrap_or("None"),
             self.runpath.as_deref().unwrap_or("None")
         )
+    }
+}
+
+impl std::fmt::Display for NeededLibraries {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.libraries.is_empty() {
+            write!(f, "None")
+        } else {
+            write!(f, "{}", self.libraries.join(", "))
+        }
     }
 }
 
@@ -226,4 +242,29 @@ pub fn check_rpaths(elf: &Elf) -> RPathStatus {
         rpath,
         runpath,
     }
+}
+
+pub fn check_stripped(elf: &Elf) -> CheckStatus {
+    if elf.syms.is_empty() {
+        CheckStatus::Enabled
+    }
+    else {
+        CheckStatus::Disabled
+    }
+}
+
+pub fn get_needed_libraries(elf: &Elf) -> NeededLibraries {
+    let mut libraries = Vec::new();
+
+    if let Some(dynamic) = &elf.dynamic {
+        for dyn_entry in &dynamic.dyns {
+            if dyn_entry.d_tag == DT_NEEDED {
+                if let Some(lib) = elf.dynstrtab.get_at(dyn_entry.d_val as usize) {
+                    libraries.push(lib.to_string());
+                }
+            }
+        }
+    }
+
+    NeededLibraries { libraries }
 }

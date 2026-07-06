@@ -64,4 +64,14 @@ fn main() {
     println!("Relro: {}", check_relro(&elf));
     println!("Fortify: {}", check_fortify(&elf));
     println!("{}", check_rpaths(&elf)); //runpath
-}
+    let stripped = check_stripped(&elf);
+    match stripped {
+        CheckStatus::Enabled => println!("Stripped : Yes"),
+        CheckStatus::Disabled => println!("Stripped : No"),
+        CheckStatus::Unknown(msg) => println!("Stripped : Unknown ({})", msg),
+    }
+    println!("Libraries Needed: {}", get_needed_libraries(&elf));
+    if let Some(interpreter) = elf.interpreter {
+        println!("Interpreter: {}", interpreter);
+    }
+}   
