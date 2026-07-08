@@ -20,7 +20,7 @@ fn print_header(path: &str, elf: &Elf) {
         .unwrap_or_default()
         .to_string_lossy();
 
-    println!("ELFSHIELD v0.1.0");
+    println!("ELFSHIELD v{}", env!("CARGO_PKG_VERSION"));
     println!("{}", "─".repeat(50));
 
     print_field("File", filename);
@@ -53,7 +53,7 @@ fn print_metadata(elf: &Elf) {
 }
 
 fn print_search_paths(elf: &Elf) {
-    print_section("RPATH//RUNPATH");
+    print_section("Search Paths");
     let paths = check_rpaths(elf);
     print_field("RPATH", paths.rpath.as_deref().unwrap_or("None"));
     print_field("RUNPATH", paths.runpath.as_deref().unwrap_or("None"));
@@ -61,7 +61,7 @@ fn print_search_paths(elf: &Elf) {
 
 fn print_dependencies(elf: &Elf) {
     print_section("Dependencies");
-    print_field("Needed Librarires", get_needed_libraries(elf));
+    print_field("Needed Libraries", get_needed_libraries(elf));
 }
 
 fn print_field<T: std::fmt::Display>(name: &str, value: T) {

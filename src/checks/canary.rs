@@ -8,6 +8,6 @@ pub fn check_canary(elf: &Elf) -> CheckStatus {
     if has_symbol(elf, "__stack_chk_fail") {
         CheckStatus::Enabled
     } else {
-        CheckStatus::Disabled // we'll refine UNKNOWN later
+        CheckStatus::Disabled
     }
 }

@@ -9,17 +9,17 @@ use std::fs;
 use crate::cli::print_report;
 use goblin::elf::Elf;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        eprintln!("Usage: cargo run <binary>");
-        return;
+        eprintln!("Usage: elfshield <path-to-elf>");
+        std::process::exit(1);
     }
     let path = &args[1];
-    let data = fs::read(path).expect("Couldn't read file");
-
-    let elf: Elf<'_> = Elf::parse(&data).expect("Not valid ELF");
+    let data = fs::read(path)?;
+    let elf = Elf::parse(&data)?;
 
     print_report(path, &elf);
+    Ok(())
 }
