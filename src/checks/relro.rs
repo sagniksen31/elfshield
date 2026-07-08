@@ -1,7 +1,7 @@
-use goblin::elf::Elf;
-use goblin::elf::program_header::*;
-use goblin::elf::dynamic::{DF_1_NOW, DF_BIND_NOW};
 use super::RelroStatus;
+use goblin::elf::Elf;
+use goblin::elf::dynamic::{DF_1_NOW, DF_BIND_NOW};
+use goblin::elf::program_header::*;
 
 pub fn check_relro(elf: &Elf) -> RelroStatus {
     // Step 1: Does the binary contain a PT_GNU_RELRO segment?
@@ -16,8 +16,8 @@ pub fn check_relro(elf: &Elf) -> RelroStatus {
 
     // Step 2: Check whether BIND_NOW/NOW is enabled.
     if let Some(dynamic) = &elf.dynamic {
-        let bind_now = (dynamic.info.flags & DF_BIND_NOW) != 0
-            || (dynamic.info.flags_1 & DF_1_NOW) != 0;
+        let bind_now =
+            (dynamic.info.flags & DF_BIND_NOW) != 0 || (dynamic.info.flags_1 & DF_1_NOW) != 0;
 
         if bind_now {
             RelroStatus::Full

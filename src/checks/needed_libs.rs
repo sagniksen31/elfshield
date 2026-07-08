@@ -1,5 +1,5 @@
-use goblin::{elf::Elf, elf64::dynamic::DT_NEEDED};
 use super::NeededLibraries;
+use goblin::{elf::Elf, elf64::dynamic::DT_NEEDED};
 pub fn get_needed_libraries(elf: &Elf) -> NeededLibraries {
     let mut libraries = Vec::new();
 

@@ -1,6 +1,6 @@
-use goblin::elf::program_header::*;
-use goblin::elf::Elf;
 use super::CheckStatus;
+use goblin::elf::Elf;
+use goblin::elf::program_header::*;
 
 pub fn is_nx(elf: &Elf) -> CheckStatus {
     for ph in &elf.program_headers {

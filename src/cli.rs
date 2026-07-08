@@ -1,7 +1,7 @@
-use goblin::elf::Elf;
-use std::path::Path;
 use crate::checks::*;
 use crate::utils::{get_arch, get_file_type};
+use goblin::elf::Elf;
+use std::path::Path;
 pub fn print_report(path: &str, elf: &Elf) {
     print_header(path, elf);
 
@@ -28,10 +28,7 @@ fn print_header(path: &str, elf: &Elf) {
     print_field("Entry Point", format!("{:#x}", elf.header.e_entry));
     print_field("File Type", get_file_type(elf.header.e_type));
     print_field("Architecture", get_arch(elf.header.e_machine));
-    print_field(
-        "Interpreter",
-        elf.interpreter.unwrap_or("None (Static)"),
-    );
+    print_field("Interpreter", elf.interpreter.unwrap_or("None (Static)"));
 }
 
 fn print_security(elf: &Elf) {
@@ -42,7 +39,6 @@ fn print_security(elf: &Elf) {
     print_field("Canary", check_canary(elf));
     print_field("RELRO", check_relro(elf));
     print_field("FORTIFY", check_fortify(elf));
-
 }
 
 fn print_metadata(elf: &Elf) {

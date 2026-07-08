@@ -1,7 +1,7 @@
-use goblin::elf::Elf;
 use super::FortifyStatus;
 use super::helpers::has_symbol;
 use crate::constants::FORTIFY_PAIRS;
+use goblin::elf::Elf;
 
 pub fn check_fortify(elf: &Elf) -> FortifyStatus {
     let mut fortified = 0;

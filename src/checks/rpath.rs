@@ -1,7 +1,7 @@
+use super::RPathStatus;
 use goblin::elf::Elf;
 use goblin::elf64::dynamic::DT_RPATH;
 use goblin::elf64::dynamic::DT_RUNPATH;
-use super::RPathStatus;
 pub fn check_rpaths(elf: &Elf) -> RPathStatus {
     let mut rpath = None;
     let mut runpath = None;
@@ -24,8 +24,5 @@ pub fn check_rpaths(elf: &Elf) -> RPathStatus {
         }
     }
 
-    RPathStatus {
-        rpath,
-        runpath,
-    }
+    RPathStatus { rpath, runpath }
 }

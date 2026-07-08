@@ -1,14 +1,13 @@
 mod checks;
-mod constants;
 mod cli;
+mod constants;
 mod utils;
 
 use std::env;
 use std::fs;
 
-use goblin::elf::Elf;
 use crate::cli::print_report;
-
+use goblin::elf::Elf;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -23,4 +22,4 @@ fn main() {
     let elf: Elf<'_> = Elf::parse(&data).expect("Not valid ELF");
 
     print_report(path, &elf);
-}   
+}
