@@ -78,8 +78,6 @@ Needed Libraries: libselinux.so.1, libcap.so.2, libc.so.6
 
 ## Installation
 
-## Installation
-
 ### Install from crates.io
 
 ```bash
